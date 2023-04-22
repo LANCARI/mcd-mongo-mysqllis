@@ -159,6 +159,34 @@ Respuesta:
     },
  ]);
 
+db.film_actor.aggregate([
+    {
+      $group: {
+        _id: "$actor_id",
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $lookup: {
+        from: "actor",
+        localField: "_id",
+        foreignField: "_id",
+        as: "actor"
+      }
+    },
+    {
+      $project: {
+        "actor.first_name": 1,
+        "actor.last_name": 1,
+        count: 1
+      }
+    },
+    {
+      $match: {
+        count: { $gt: 35 }
+      }
+    }
+  ])
 3. Mostrar el listado de los 10 de actores que mas peliculas realizó en la categoria `Comedy`. (Ver lookup, unwind, match, group, limit)
 
 Resultado:
@@ -179,6 +207,33 @@ Resultado:
 
 
 Respuesta:
-```
-db.film_actor.aggregate(...
-```
+  db.actor.aggregate([
+    { $lookup: {
+        from: "film_actor",
+        localField: "_id",
+        foreignField: "actor_id",
+        as: "films"
+    }},
+    { $unwind: "$films" },
+    { $lookup: {
+        from: "film_category",
+        localField: "films.film_id",
+        foreignField: "film_id",
+        as: "categories"
+    }},
+    { $unwind: "$categories" },
+    { $lookup: {
+        from: "category",
+        localField: "categories.category_id",
+        foreignField: "_id",
+        as: "category"
+    }},
+    { $unwind: "$category" },
+    { $match: { "category.name": "Comedy" } },
+    { $group: {
+        _id: { first_name: "$first_name", last_name: "$last_name" },
+        comedy_film_count: { $sum: 1 }
+    }},
+    { $sort: { comedy_film_count: -1 } },
+    { $limit: 10 }
+  ]);
