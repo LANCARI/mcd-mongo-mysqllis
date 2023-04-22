@@ -91,10 +91,17 @@ db.film.aggregate([
           }
     },
     {
+        $match:
+           {
+             "language_info.name": "English"
+           }
+     },
+    {
        $project:
           {
             language_id: 1,
-            language_name: "$language_info.name"
+            language_name: "$language_info.name",
+            title: "$title"
           }
     }
  ]);
